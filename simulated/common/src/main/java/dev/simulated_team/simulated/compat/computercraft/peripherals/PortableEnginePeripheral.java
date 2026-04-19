@@ -17,11 +17,21 @@ public class PortableEnginePeripheral extends SimPeripheral<PortableEngineBlockE
 
     // --- Fuel state ---
 
+    // Burn time remaining on the currently-burning fuel item, in ticks. While
+    // lit, decrements by exactly 1 per game tick (20/s) regardless of signal,
+    // speed, stress, or superheating. Do not finite-difference this to
+    // "measure" a fuel rate: the rate is a game constant, and sampling across
+    // a refill event from the inventory will jump the value upward and make
+    // the naive rate look wrong.
     @LuaFunction
     public int getBurnTime() {
         return this.blockEntity.getCurrentBurnTime();
     }
 
+    // Total burn time across the currently-burning fuel plus the remaining
+    // stack in the inventory, in ticks. Divide by 20 for seconds of
+    // endurance; this is the right field to use for "how long until I run
+    // out" rather than getBurnTime(), which only covers the active item.
     @LuaFunction
     public int getTotalBurnTime() {
         return this.blockEntity.getTotalBurnTime();
