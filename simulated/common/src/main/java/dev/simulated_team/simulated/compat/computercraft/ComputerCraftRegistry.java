@@ -36,6 +36,7 @@ public class ComputerCraftRegistry {
 
         add(service, SimBlockEntityTypes.SIMPLE_BE, AnalogTransmissionPeripheral::new);
         add(service, SimBlockEntityTypes.PHYSICS_ASSEMBLER, PhysicsAssemblerPeripheral::new);
+        add(service, SimBlockEntityTypes.PORTABLE_ENGINE, PortableEnginePeripheral::new);
     }
 
     private static <T extends BlockEntity> void add(final SimPeripheralService service, final Supplier<BlockEntityType<T>> supplier, final Function<T, IPeripheral> peripheralFunction) {
