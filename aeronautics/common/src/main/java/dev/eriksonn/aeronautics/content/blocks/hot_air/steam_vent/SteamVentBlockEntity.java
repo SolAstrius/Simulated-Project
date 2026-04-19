@@ -47,7 +47,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SteamVentBlockEntity extends SmartBlockEntity implements BlockEntityLiftingGasProvider, IHaveGoggleInformation {
+public class SteamVentBlockEntity extends SmartBlockEntity implements dev.eriksonn.aeronautics.content.blocks.hot_air.GasProviderData, IHaveGoggleInformation {
     // Steam vents can only be placed on top of fluid tanks, so this is valid
     public static final Direction CHECKING_DIR = Direction.DOWN;
     private static final MutableComponent SCROLL_OPTION_TITLE = AeroLang.translate("scroll_option.hot_air_amount").component();
@@ -318,6 +318,30 @@ public class SteamVentBlockEntity extends SmartBlockEntity implements BlockEntit
             return this.renderHandler = new GasEmitterRenderHandler();
         }
         return this.renderHandler;
+    }
+
+    public ScrollValueBehaviour getSteamAmountBehaviour() {
+        return this.steamAmountBehaviour;
+    }
+
+    @Override
+    public double getBoilerEfficiency() {
+        return this.efficiency;
+    }
+
+    @Override
+    public int getSignalStrength() {
+        return this.signalStrength;
+    }
+
+    @Override
+    public int getTargetAmount() {
+        return this.steamAmountBehaviour.getValue();
+    }
+
+    @Override
+    public void setTargetAmount(final int amount) {
+        this.steamAmountBehaviour.setValue(amount);
     }
 
     public static class SteamVentValueBoxTransform extends ValueBoxTransform.Sided {

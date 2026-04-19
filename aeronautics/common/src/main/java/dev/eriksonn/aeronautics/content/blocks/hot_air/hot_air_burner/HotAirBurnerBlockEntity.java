@@ -40,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public class HotAirBurnerBlockEntity extends SmartBlockEntity
-        implements BlockEntityLiftingGasProvider, IHaveGoggleInformation, IHaveHoveringInformation {
+        implements dev.eriksonn.aeronautics.content.blocks.hot_air.GasProviderData, IHaveGoggleInformation, IHaveHoveringInformation {
     private static final MutableComponent SCROLL_OPTION_TITLE = AeroLang.translate("scroll_option.hot_air_amount").component();
     private static final String VALUE_FORMAT = "%s m³";
 
@@ -313,6 +313,20 @@ public class HotAirBurnerBlockEntity extends SmartBlockEntity
 
     public LerpedFloat getClientIntensity() {
         return this.intensity;
+    }
+
+    public ScrollValueBehaviour getHotAirAmountBehaviour() {
+        return this.hotAirAmountBehaviour;
+    }
+
+    @Override
+    public int getTargetAmount() {
+        return this.hotAirAmountBehaviour.getValue();
+    }
+
+    @Override
+    public void setTargetAmount(final int amount) {
+        this.hotAirAmountBehaviour.setValue(amount);
     }
 
 
