@@ -13,9 +13,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollVa
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import dev.ryanhcode.sable.Sable;
 import dev.ryanhcode.sable.api.SubLevelHelper;
+import dev.ryanhcode.sable.api.physics.handle.RigidBodyHandle;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.companion.math.Pose3dc;
 import dev.ryanhcode.sable.physics.config.dimension_physics.DimensionPhysicsData;
+import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.simulated_team.simulated.data.SimLang;
@@ -77,6 +79,9 @@ public class GimbalSensorBlockEntity extends SmartBlockEntity implements IHaveGo
     private double ZAngle;
     private double XAngle;
 
+    private final Vector3d angularVelocityBody = new Vector3d();
+    private final Vector3d gravityBody = new Vector3d();
+
     public GimbalSensorBlockEntity(final BlockEntityType<?> type, final BlockPos pos, final BlockState state) {
         super(type, pos, state);
 
@@ -123,6 +128,15 @@ public class GimbalSensorBlockEntity extends SmartBlockEntity implements IHaveGo
 
         this.setPower(this.XAngle, Direction.SOUTH);
         this.setPower(-this.XAngle, Direction.NORTH);
+
+        if (subLevel instanceof final ServerSubLevel serverSubLevel) {
+            RigidBodyHandle.of(serverSubLevel).getAngularVelocity(this.angularVelocityBody);
+            serverSubLevel.logicalPose().orientation().transformInverse(this.angularVelocityBody);
+
+            final Vector3dc worldPos = Sable.HELPER.projectOutOfSubLevel(this.getLevel(), JOMLConversion.atCenterOf(this.getBlockPos()));
+            this.gravityBody.set(DimensionPhysicsData.getGravity(this.getLevel(), worldPos));
+            serverSubLevel.logicalPose().orientation().transformInverse(this.gravityBody);
+        }
     }
 
     public void randomNudge() {
@@ -297,6 +311,14 @@ public class GimbalSensorBlockEntity extends SmartBlockEntity implements IHaveGo
 
     public double getXAngle() {
         return this.XAngle;
+    }
+
+    public Vector3dc getAngularVelocityBody() {
+        return this.angularVelocityBody;
+    }
+
+    public Vector3dc getGravityBody() {
+        return this.gravityBody;
     }
 
     @Override
