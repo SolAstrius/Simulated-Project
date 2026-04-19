@@ -33,6 +33,8 @@ public class ComputerCraftRegistry {
         add(service, SimBlockEntityTypes.DOCKING_CONNECTOR, DockingConnectorPeripheral::new);
         add(service, SimBlockEntityTypes.TORSION_SPRING, TorsionSpringPeripheral::new);
         add(service, SimBlockEntityTypes.NAMEPLATE, NamePlatePeripheral::new);
+
+        add(service, SimBlockEntityTypes.SIMPLE_BE, AnalogTransmissionPeripheral::new);
     }
 
     private static <T extends BlockEntity> void add(final SimPeripheralService service, final Supplier<BlockEntityType<T>> supplier, final Function<T, IPeripheral> peripheralFunction) {

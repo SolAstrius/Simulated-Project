@@ -39,6 +39,11 @@ public class AnalogTransmissionBlockEntity extends KineticBlockEntity implements
 
     private int signal = 0;
 
+    /**
+     * When true, the signal is owned by a ComputerCraft peripheral and redstone input is ignored
+     * until {@code setExternallyControlled(false)} is called.
+     */
+    private boolean externallyControlled = false;
 
     /**
      * Set whenever the analog transmission disconnects due to overspeeding
@@ -58,28 +63,11 @@ public class AnalogTransmissionBlockEntity extends KineticBlockEntity implements
      */
     @Override
     public void tick() {
-        final int bestNeighborSignal = this.getLevel().getBestNeighborSignal(this.getBlockPos());
-
         if (!this.getLevel().isClientSide) {
-            if (bestNeighborSignal != this.signal) {
-                //detach our own network, and our ExtraKinetic's
-                this.detachKinetics();
-                this.extraWheel.detachKinetics();
-
-                //Remove the sources
-                this.removeSource();
-                this.extraWheel.removeSource();
-
-                this.signal = bestNeighborSignal;
-                this.getLevel().setBlockAndUpdate(this.getBlockPos(), this.getBlockState().setValue(AnalogTransmissionBlock.POWERED, this.signal > 0));
-
-                //Depending on if we are connected to the ExtraKinetic BlockEntity, or vise versa, we need to attach kinetics accordingly
-                if (((KineticBlockEntityExtension) this).simulated$getConnectedToExtraKinetics()) {//Attach ours, then ExtraKientic's
-                    this.attachKinetics();
-                    this.extraWheel.attachKinetics();
-                } else { //Attach ExtraKinetic's, then ours
-                    this.extraWheel.attachKinetics();
-                    this.attachKinetics();
+            if (!this.externallyControlled) {
+                final int bestNeighborSignal = this.getLevel().getBestNeighborSignal(this.getBlockPos());
+                if (bestNeighborSignal != this.signal) {
+                    this.applySignal(bestNeighborSignal);
                 }
             }
         } else if (this.oversaturated) {
@@ -93,6 +81,49 @@ public class AnalogTransmissionBlockEntity extends KineticBlockEntity implements
 
         this.extraWheel.tick();
         super.tick();
+    }
+
+    /**
+     * Change the active signal and re-wire the kinetic network. Callable from tick() (redstone path)
+     * and from the ComputerCraft peripheral (external path).
+     */
+    public void applySignal(final int newSignal) {
+        if (newSignal == this.signal) return;
+
+        this.detachKinetics();
+        this.extraWheel.detachKinetics();
+
+        this.removeSource();
+        this.extraWheel.removeSource();
+
+        this.signal = newSignal;
+        this.getLevel().setBlockAndUpdate(this.getBlockPos(), this.getBlockState().setValue(AnalogTransmissionBlock.POWERED, this.signal > 0));
+
+        if (((KineticBlockEntityExtension) this).simulated$getConnectedToExtraKinetics()) {
+            this.attachKinetics();
+            this.extraWheel.attachKinetics();
+        } else {
+            this.extraWheel.attachKinetics();
+            this.attachKinetics();
+        }
+
+        this.sendData();
+    }
+
+    public int getSignal() {
+        return this.signal;
+    }
+
+    public boolean isOversaturated() {
+        return this.oversaturated;
+    }
+
+    public boolean isExternallyControlled() {
+        return this.externallyControlled;
+    }
+
+    public void setExternallyControlled(final boolean externallyControlled) {
+        this.externallyControlled = externallyControlled;
     }
 
     @VisibleForTesting
@@ -135,6 +166,9 @@ public class AnalogTransmissionBlockEntity extends KineticBlockEntity implements
 
         compound.putInt("Signal", this.signal);
         compound.putBoolean("Oversaturated", this.oversaturated);
+        if (!clientPacket) {
+            compound.putBoolean("ExternallyControlled", this.externallyControlled);
+        }
     }
 
     @Override
@@ -143,6 +177,9 @@ public class AnalogTransmissionBlockEntity extends KineticBlockEntity implements
 
         this.signal = compound.getInt("Signal");
         this.oversaturated = compound.getBoolean("Oversaturated");
+        if (!clientPacket) {
+            this.externallyControlled = compound.getBoolean("ExternallyControlled");
+        }
     }
 
     @Override
