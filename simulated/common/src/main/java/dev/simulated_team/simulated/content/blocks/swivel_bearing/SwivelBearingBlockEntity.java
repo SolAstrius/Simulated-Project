@@ -482,14 +482,17 @@ public class SwivelBearingBlockEntity extends KineticBlockEntity implements Extr
 
         this.removeHandle();
         if (this.getSubLevelID() != null) {
-            final SubLevel subLevel = SubLevelContainer.getContainer(this.getLevel()).getSubLevel(this.getSubLevelID());
+            final SubLevel subLevel = SubLevelContainer.getContainer(this.level).getSubLevel(this.getSubLevelID());
             if (subLevel != null) {
-                if (this.getPlatePos() != null) {
+                BlockPos platePos = this.getPlatePos();
+                if (platePos != null) {
                     this.destroyPlate();
 
                     // if destroying the plate removed the sub-level, skip disassembling
                     if (!subLevel.isRemoved()) {
-                        SimAssemblyHelper.disassembleSubLevel(this.getLevel(), subLevel, this.getPlatePos(), this.getBlockPos(), Rotation.NONE, true);
+                        SimAssemblyHelper.disassembleSubLevel(this.level, subLevel, platePos, this.getBlockPos(), Rotation.NONE, true);
+                    } else {
+                        this.level.playSound(null, platePos, SimSoundEvents.SIMULATED_CONTRAPTION_STOPS.event(), SoundSource.BLOCKS, 1.0f, 1.0f);
                     }
                 }
             }
